@@ -1,11 +1,11 @@
-package com.university.labproject;
+﻿package com.example.grades;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class LabProjectApplication {
+public class Application {
     public static void main(String[] args) {
-        SpringApplication.run(LabProjectApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 }
