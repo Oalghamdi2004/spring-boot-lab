@@ -1,4 +1,4 @@
-﻿package com.example.grades;
+package com.example.grades;
 
 public class Student {
     private Long id;
