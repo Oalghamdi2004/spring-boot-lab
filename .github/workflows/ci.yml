@@ -2,17 +2,16 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-  build-and-analyze:
-    name: Build, Analyze, and Dockerize
+  build-test-scan-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -20,13 +19,12 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
+          java-version: '17'
           cache: 'maven'
 
-      - name: Build and Analyze on SonarCloud
+      - name: Build, test, and SonarCloud scan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
@@ -35,5 +33,19 @@ jobs:
           -Dsonar.branch.name=master \
           -Dsonar.host.url=https://sonarcloud.io
 
-      - name: Test Docker Build
-        run: docker build -t lab-project-api .
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/student-grade-api:${{ github.sha }}
